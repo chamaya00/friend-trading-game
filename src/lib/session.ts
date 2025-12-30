@@ -1,5 +1,4 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from './auth';
 
 /**
  * MOCK MODE SUPPORT
@@ -19,6 +18,8 @@ export async function getSession() {
     return getMockSession();
   }
 
+  // Dynamically import authOptions to avoid loading Prisma/database in mock mode
+  const { authOptions } = await import('./auth');
   return await getServerSession(authOptions);
 }
 

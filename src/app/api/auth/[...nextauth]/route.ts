@@ -1,6 +1,5 @@
 import NextAuth from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { authOptions } from '@/lib/auth';
 
 const isMockMode = process.env.MOCK_DATA === 'true';
 
@@ -43,7 +42,16 @@ function mockHandler(req: NextRequest) {
   return NextResponse.json({});
 }
 
-const realHandler = NextAuth(authOptions);
+// Lazily create the real handler only when needed (avoids loading Prisma/database in mock mode)
+let realHandler: ReturnType<typeof NextAuth> | null = null;
+
+async function getRealHandler() {
+  if (!realHandler) {
+    const { authOptions } = await import('@/lib/auth');
+    realHandler = NextAuth(authOptions);
+  }
+  return realHandler;
+}
 
 export async function GET(req: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
   if (isMockMode) {
@@ -51,7 +59,8 @@ export async function GET(req: NextRequest, context: { params: Promise<{ nextaut
   }
   // Await params for Next.js 15+ compatibility - NextAuth v4 expects synchronous params
   const params = await context.params;
-  return realHandler(req, { params });
+  const handler = await getRealHandler();
+  return handler(req, { params });
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
@@ -60,5 +69,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ nextau
   }
   // Await params for Next.js 15+ compatibility - NextAuth v4 expects synchronous params
   const params = await context.params;
-  return realHandler(req, { params });
+  const handler = await getRealHandler();
+  return handler(req, { params });
 }
