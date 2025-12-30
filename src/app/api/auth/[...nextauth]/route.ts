@@ -1,7 +1,14 @@
 import NextAuth from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
-const isMockMode = process.env.MOCK_DATA === 'true';
+// Auto-detect mock mode if required environment variables are missing
+const hasRequiredEnvVars = !!(
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.DATABASE_URL
+);
+
+const isMockMode = process.env.MOCK_DATA === 'true' || !hasRequiredEnvVars;
 
 // Mock session data for client-side
 const mockSession = {
