@@ -49,12 +49,16 @@ export async function GET(req: NextRequest, context: { params: Promise<{ nextaut
   if (isMockMode) {
     return mockHandler(req);
   }
-  return realHandler(req, context);
+  // Await params for Next.js 15+ compatibility - NextAuth v4 expects synchronous params
+  const params = await context.params;
+  return realHandler(req, { params });
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ nextauth: string[] }> }) {
   if (isMockMode) {
     return mockHandler(req);
   }
-  return realHandler(req, context);
+  // Await params for Next.js 15+ compatibility - NextAuth v4 expects synchronous params
+  const params = await context.params;
+  return realHandler(req, { params });
 }
