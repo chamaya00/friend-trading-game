@@ -18,7 +18,7 @@ interface User {
   purchaseCount: number;
   version: number;
   ownerId: string | null;
-  owner: {
+  owner?: {
     id: string;
     username: string;
     displayName: string;
