@@ -11,25 +11,43 @@ A social game where users can "buy" and "own" other users using fake currency. I
 
 ## Getting Started
 
-### Prerequisites
+### Quick Start (Mock Mode)
+
+Run the app instantly without any database or OAuth setup:
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+That's it! The app will run with placeholder data at `http://localhost:3000`.
+
+You'll be automatically "logged in" as a demo user and can explore all features.
+
+### Full Setup (Production Mode)
+
+For the complete experience with real data persistence:
+
+#### Prerequisites
 
 - Node.js 18+
 - PostgreSQL database
 - Google OAuth credentials
 
-### Setup
+#### Setup
 
 1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and fill in your values:
+2. Copy `.env.example` to `.env.local`:
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
 
-3. Set up your environment variables:
+3. Edit `.env.local` and set `MOCK_DATA=false`, then configure:
    - `DATABASE_URL`: Your PostgreSQL connection string
    - `NEXTAUTH_URL`: Your app URL (http://localhost:3000 for development)
    - `NEXTAUTH_SECRET`: A random secret for NextAuth
@@ -46,6 +64,13 @@ A social game where users can "buy" and "own" other users using fake currency. I
    ```bash
    npm run dev
    ```
+
+### Switching Between Modes
+
+- **Mock Mode**: Set `MOCK_DATA=true` in `.env.local` - uses in-memory placeholder data
+- **Production Mode**: Set `MOCK_DATA=false` - requires database and OAuth setup
+
+To completely remove mock mode later, delete the `src/lib/mock/` folder.
 
 ## Features
 
