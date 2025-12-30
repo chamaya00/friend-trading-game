@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Application models
+model User {
+  id          String  @id @default(cuid())
+  email       String  @unique
+  username    String  @unique
+  displayName String
+  avatarUrl   String?
+  bio         String? @db.VarChar(160)
+  tags        String[] @default([])
+
+  // Economy
+  balance Int @default(100000) // $1000.00 in cents
+  price   Int @default(10000)  // $100.00 in cents
+
+  // Ownership
+  ownerId    String?
+  owner      User?   @relation("Ownership", fields: [ownerId], references: [id])
+  ownedUsers User[]  @relation("Ownership")
+
+  // Stats
+  purchaseCount Int @default(0)
+  version       Int @default(1) // For optimistic locking
+
+  // Streaks
+  lastLoginDate DateTime?
+  currentStreak Int       @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Soft delete
+  deactivatedAt DateTime?
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Transaction relations
+  purchasesMade    Transaction[] @relation("BuyerTransactions")
+  salesMade        Transaction[] @relation("SellerTransactions")
+  purchasesAsTarget Transaction[] @relation("TargetTransactions")
+
+  // Ledger relations
+  ledgerEntries LedgerEntry[]
+
+  // Notification relations
+  notifications Notification[]
+}
+
+model Transaction {
+  id String @id @default(cuid())
+
+  // Participants
+  buyerId  String
+  sellerId String?
+  targetId String
+
+  buyer  User  @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  seller User? @relation("SellerTransactions", fields: [sellerId], references: [id])
+  target User  @relation("TargetTransactions", fields: [targetId], references: [id])
+
+  // Money
+  price          Int
+  sellerReceived Int
+  targetBonus    Int
+
+  // State snapshots (for auditing)
+  buyerBalanceBefore  Int
+  buyerBalanceAfter   Int
+  sellerBalanceBefore Int?
+  sellerBalanceAfter  Int?
+  targetPriceBefore   Int
+  targetPriceAfter    Int
+  targetVersionBefore Int
+  targetVersionAfter  Int
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([targetId])
+  @@index([createdAt])
+}
+
+enum LedgerEntryType {
+  SIGNUP_BONUS
+  DAILY_LOGIN
+  STREAK_BONUS_3
+  STREAK_BONUS_7
+  PURCHASE_PAYMENT
+  SALE_REVENUE
+  OWNERSHIP_BONUS
+}
+
+model LedgerEntry {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  amount       Int             // positive = credit, negative = debit
+  balanceAfter Int             // running balance
+  type         LedgerEntryType
+
+  referenceType String?
+  referenceId   String?
+  description   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  YOU_WERE_BOUGHT
+  YOUR_PERSON_SOLD
+  DAILY_BONUS
+  STREAK_BONUS
+}
+
+model Notification {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  type   NotificationType
+  data   Json             // Flexible payload for rendering
+
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// Idempotency key storage
+model IdempotencyKey {
+  key       String   @id
+  result    Json
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
