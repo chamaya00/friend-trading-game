@@ -249,7 +249,11 @@ export async function purchaseUser(
       });
 
       // 12. Create notifications
-      const notifications = [
+      const notifications: {
+        userId: string;
+        type: NotificationType;
+        data: Record<string, unknown>;
+      }[] = [
         // Notify target they were bought
         {
           userId: target.id,
