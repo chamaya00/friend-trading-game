@@ -6,13 +6,17 @@ import { PrismaClient } from '@prisma/client'
  * When MOCK_DATA=true, we use an in-memory mock client instead of a real database.
  * This allows running the app without PostgreSQL or any database setup.
  *
+ * Mock mode is automatically enabled if:
+ * - MOCK_DATA=true is set, OR
+ * - DATABASE_URL is not set
+ *
  * To disable mock mode and use a real database:
- * 1. Set MOCK_DATA=false in .env.local (or remove the variable)
+ * 1. Set MOCK_DATA=false in .env.local
  * 2. Set up your DATABASE_URL in .env.local
  * 3. Run: npx prisma migrate dev
  */
 
-const isMockMode = process.env.MOCK_DATA === 'true';
+const isMockMode = process.env.MOCK_DATA === 'true' || !process.env.DATABASE_URL;
 
 // Real Prisma client (only initialized when not in mock mode)
 const globalForPrisma = globalThis as unknown as {

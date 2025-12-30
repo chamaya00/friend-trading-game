@@ -1,10 +1,9 @@
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import { prisma } from './prisma';
 import { ECONOMY } from './constants';
-import { LedgerEntryType } from '@prisma/client';
 
 // Type for Prisma transaction client
 type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
@@ -34,6 +33,7 @@ async function makeUsernameUnique(baseUsername: string): Promise<string> {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET || 'development-secret-do-not-use-in-production',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -73,7 +73,7 @@ export const authOptions: NextAuthOptions = {
             userId: user.id,
             amount: ECONOMY.STARTING_BALANCE,
             balanceAfter: ECONOMY.STARTING_BALANCE,
-            type: LedgerEntryType.SIGNUP_BONUS,
+            type: 'SIGNUP_BONUS',
             description: 'Welcome bonus!',
           },
         });
