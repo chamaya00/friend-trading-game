@@ -1,9 +1,13 @@
 import { NextAuthOptions } from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import GoogleProvider from 'next-auth/providers/google';
+import { PrismaClient } from '@prisma/client';
 import { prisma } from './prisma';
 import { ECONOMY } from './constants';
 import { LedgerEntryType } from '@prisma/client';
+
+// Type for Prisma transaction client
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 // Generate username from email
 function generateUsername(email: string): string {
@@ -51,7 +55,7 @@ export const authOptions: NextAuthOptions = {
       const username = await makeUsernameUnique(baseUsername);
 
       // Update user with game-specific fields and award signup bonus
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: TransactionClient) => {
         await tx.user.update({
           where: { id: user.id },
           data: {

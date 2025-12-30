@@ -1,7 +1,10 @@
 import { prisma } from './prisma';
 import { ECONOMY } from './constants';
-import { LedgerEntryType, NotificationType, Prisma } from '@prisma/client';
+import { LedgerEntryType, NotificationType, Prisma, PrismaClient } from '@prisma/client';
 import type { PurchaseError, TransactionWithUsers } from '@/types';
+
+// Type for Prisma transaction client
+type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>;
 
 interface PurchaseParams {
   buyerId: string;
@@ -80,7 +83,7 @@ export async function purchaseUser(
 
   // 2. Start database transaction
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: TransactionClient) => {
       // 3. Lock and fetch target
       const target = await tx.user.findUnique({
         where: { id: targetId },
