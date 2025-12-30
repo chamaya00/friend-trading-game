@@ -172,7 +172,15 @@ export async function purchaseUser(
       });
 
       // 8. Create ledger entries
-      const ledgerEntries = [
+      const ledgerEntries: {
+        userId: string;
+        amount: number;
+        balanceAfter: number;
+        type: LedgerEntryType;
+        referenceType: string;
+        referenceId: string;
+        description: string;
+      }[] = [
         // Buyer pays
         {
           userId: buyer.id,
