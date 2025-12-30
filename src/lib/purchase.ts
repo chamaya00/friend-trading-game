@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { ECONOMY } from './constants';
-import { LedgerEntryType, NotificationType } from '@prisma/client';
+import { LedgerEntryType, NotificationType, Prisma } from '@prisma/client';
 import type { PurchaseError, TransactionWithUsers } from '@/types';
 
 interface PurchaseParams {
@@ -252,7 +252,7 @@ export async function purchaseUser(
       const notifications: {
         userId: string;
         type: NotificationType;
-        data: Record<string, unknown>;
+        data: Prisma.InputJsonValue;
       }[] = [
         // Notify target they were bought
         {
