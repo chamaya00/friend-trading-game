@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { ECONOMY } from './constants';
-import { LedgerEntryType, NotificationType } from '@prisma/client';
+import { LedgerEntryType, NotificationType, Prisma } from '@prisma/client';
 import type { PurchaseError, TransactionWithUsers } from '@/types';
 
 interface PurchaseParams {
@@ -172,7 +172,15 @@ export async function purchaseUser(
       });
 
       // 8. Create ledger entries
-      const ledgerEntries = [
+      const ledgerEntries: {
+        userId: string;
+        amount: number;
+        balanceAfter: number;
+        type: LedgerEntryType;
+        referenceType: string;
+        referenceId: string;
+        description: string;
+      }[] = [
         // Buyer pays
         {
           userId: buyer.id,
@@ -241,7 +249,11 @@ export async function purchaseUser(
       });
 
       // 12. Create notifications
-      const notifications = [
+      const notifications: {
+        userId: string;
+        type: NotificationType;
+        data: Prisma.InputJsonValue;
+      }[] = [
         // Notify target they were bought
         {
           userId: target.id,

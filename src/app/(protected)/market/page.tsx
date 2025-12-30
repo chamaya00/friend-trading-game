@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { UserCard } from '@/components/UserCard';
@@ -18,7 +18,7 @@ interface User {
   purchaseCount: number;
   version: number;
   ownerId: string | null;
-  owner: {
+  owner?: {
     id: string;
     username: string;
     displayName: string;
@@ -30,7 +30,7 @@ interface UserData {
   balance: number;
 }
 
-export default function MarketPage() {
+function MarketPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -229,5 +229,28 @@ export default function MarketPage() {
         />
       )}
     </div>
+  );
+}
+
+function MarketPageFallback() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-48 mb-8" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-48 bg-gray-200 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function MarketPage() {
+  return (
+    <Suspense fallback={<MarketPageFallback />}>
+      <MarketPageContent />
+    </Suspense>
   );
 }
